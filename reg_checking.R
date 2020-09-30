@@ -18,10 +18,11 @@ periods_orig = postForm(uri='https://globalsurgery.redcap.bham.ac.uk/api/',
 # make long
 collab_long = periods_orig %>%
     pivot_longer(
-        cols = orcid_1:email_5,
+        cols = matches("orcid_|email_"),
         names_to = c(".value", "number"),
         names_pattern = "(.+)_(.+)",
         values_drop_na = TRUE)
+
 
 # fewer columns for checking
 collab_long_check = collab_long %>% 
