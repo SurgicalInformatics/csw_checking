@@ -1,0 +1,315 @@
+---
+title: |
+    ![](https://globalsurg.org/wp-content/uploads/2020/09/logo-surgweek-1200x133.png){} 
+    Surg-Week Registration Check
+date: "`r format(Sys.time(), '%d %B, %Y %H:%M')`"
+output: html_document
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+library(DT)
+library(knitr)
+#library(icon)
+library(shinyBS)
+library(shiny)
+library(formattable)
+library(fontawesome)
+library(emojifont)
+library(waffle)
+library(ggpubr)
+
+source("02_check_dashboard.R")
+
+#load("periods_check.rda")
+```
+
+-------------------------------------
+
+### Check the status of your team {.tabset .tabset-fade}
+
+Find your team below to check their status then select the **Help** tab for more information.
+
+You can find your reference number in the confirmation email you received immediately after submitting your registration request.
+
+For a summary of team registration progress so far, click on the **Summary** tab.
+
+
+#### **Find your team**
+
+```{r}
+
+periods_check %>% 
+    select(-time) %>% 
+    mutate_at(vars(form_complete:accounts_created_success), function(x)
+        (x == "Yes")) %>%
+    formattable(
+        list(
+            form_complete = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "No",
+                              TRUE ~ ""))),
+            period_choice_success = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "No",
+                              TRUE ~ ""))),
+            duplicate_check_success = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "No",
+                              TRUE ~ ""))),
+            emails_unique_success = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "No",
+                              TRUE ~ ""))),
+            orcids_valid_success = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "No",
+                              TRUE ~ ""))),
+            accounts_created_success = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "red",
+                                                    TRUE ~ "")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ ""),
+                    case_when(x ~ "Yes",!x ~ "Not yet",
+                              TRUE ~ "")))
+        )) %>%
+            as.datatable(
+                rownames = FALSE,
+                options = list(
+                    pageLength = 50,
+                    autoWidth = TRUE
+                    # columnDefs = list(list(width = '10%',
+                    #                       targets = list(0)))
+                    ),
+                filter = "top",
+                escape = FALSE,
+                colnames = c("Reference" = "record_id",
+           "Registration complete?" = "form_complete",
+           "Period choice successful?" = "period_choice_success",
+           "Duplicate check passed?" = "duplicate_check_success",
+           "Unique emails used?" = "emails_unique_success",
+           "ORCID names showing?" = "orcids_valid_success",
+           "Accounts created?" = "accounts_created_success"))
+        
+```
+
+
+#### **Help**
+
+&nbsp;
+
+Go to <a href="https://is.gd/surghelpdesk" target="_blank">**GlobalSurg-CovidSurg Helpdesk**</a> for general help relating to the Surg-Week project.
+
+&nbsp;
+
+Why is my account not created yet?
+
+* If **Accounts created?** is showing as **Not yet**, this means your account is in the process of being created, you do not need to do anything further at this stage.
+    * Teams who are collecting in Period 3 will get accounts 12-16 October.
+    * Teams who are collecting in Period 4 will get accounts 19-23 October.
+
+* If **Accounts created?** is blank, this means all previous checks have not yet been passed.
+        * Resolve any checks that have a cross and are marked as **No**, see below.
+
+&nbsp;
+
+Why am I seeing **No** for:
+
+&nbsp;
+
+* **Registration complete?** - Your registration form was missing vital information.
+    * There is still time to register, go to https://is.gd/miniteams and make sure you have all the necessary information.
+
+&nbsp;
+
+* **Period choice successful?** - Another team has already picked the same period and specialty as you.
+    * You can check to see if an alternative period is available here: https://is.gd/miniteams
+
+&nbsp;
+
+* **Valid ORCIDs?** - Either the ORCID you entered was not valid or no name is currently showing on your ORCID record.
+    * Check that you have not made a mistake and that all name fields are complete and not set to private on ORCID: https://orcid.org/
+
+&nbsp;
+
+* **Duplicate check passed?** - A member of your team also has a registration submitted with another team.
+
+&nbsp;
+
+* **Unique emails used?** - The same email has been used for multiple team members.
+    + Make sure that each team member has their own email associated with their registration details.
+
+
+#### **Summary**
+
+```{r}
+# create summary data
+summary_data = periods_check %>%
+    mutate(
+        reg_status = case_when(
+            accounts_created_success == "Yes" ~ "Accounts created",
+            emails_unique_success == "Yes" ~ "Applications approved",
+            form_complete == "Yes" ~ "Checks still to pass",
+            TRUE ~ NA_character_
+        ) %>% fct_relevel("Accounts created", "Waiting for accounts")
+    ) %>%
+    drop_na(reg_status) %>%
+    group_by(reg_status) %>%
+    summarise(n = n()) %>%
+    mutate(percent = round(n / sum(n) * 100))
+
+# create boxes data
+boxes_data = summary_data %>%
+    mutate(
+        x = seq(2, 15, 6.5),
+        y = rep(1, 3),
+        h = rep(4.25, 3),
+        w = rep(6.25, 3),
+        shape = fontawesome(c(
+            "fa-check-square-o", "fa-clock-o", "fa-pencil-square-o")),
+        font_family = c(rep("fontawesome-webfont", 3)),
+        color = factor(1:3))
+
+# make boxes
+boxes = ggplot(boxes_data, aes(
+    x,
+    y,
+    height = h,
+    width = w,
+    label = reg_status
+)) +
+    geom_tile(aes(fill = color)) +
+    geom_text(
+        colour = "white",
+        fontface = "bold",
+        size = 10,
+        aes(
+            label = n,
+            x = x - 2.5,
+            y = y + 0.8
+        ),
+        hjust = 0
+    ) +
+    geom_text(
+        color = "white",
+        fontface = "bold",
+        aes(
+            label = reg_status,
+            x = x - 2.5,
+            y = y - 1.3
+        ),
+        hjust = 0
+    ) +
+    geom_text(
+        colour = "white",
+        fontface = "bold",
+        aes(
+            label = paste0(percent, "% with"),
+            x = x - 2.5,
+            y = y - 0.4
+        ),
+        hjust = 0
+    ) +
+    scale_fill_brewer(type = "qual", palette = "Dark2") +
+    ## fontawesome issues below
+    # geom_text(
+    #     size = 20,
+    #     aes(
+    #         label = shape,
+    #         family = font_family,
+    #         x = x + 1.5,
+    #         y = y + 0.5
+    #     ),
+    #     alpha = 0.25
+    # ) +
+    theme_void() +
+    coord_fixed(ratio = 1) +
+    theme(plot.margin = unit(c(-0.15, 0, -0.15, 0), "null")) +
+    theme(legend.position = "none")
+
+```
+
+```{r}
+# prepare waffle data
+waffle_percents = summary_data$percent
+names(waffle_percents) = summary_data$reg_status
+
+waffle = waffle(
+    waffle_percents,
+    rows = 4,
+    legend_pos = "none"
+    ## fontawesome issues below
+    # use_glyph = c("check-square-o", "pencil-square-o", "clock-o"),
+    # glyph_size = 5
+    ) +
+    theme(plot.margin = unit(c(-0.25, 0, 0, 0), "null")) 
+    # theme(plot.background = element_rect(colour = "red"))
+
+```
+
+
+```{r}
+# white space is driving me nuts - partial fix by combining plots!
+ggarrange(
+    boxes,
+    waffle,
+    ncol = 1,
+    # labels = c(title = "Mini-team status"),
+    font.label = c(face = "plain"))
+```
+
+```{r}
+# total of all registrations submitted
+periods_check %>% 
+    filter(record_id != 859) %>% 
+    arrange(time) %>% 
+    mutate(cum_reg = seq_along(time)) %>% 
+    ggplot(aes(x = time, y = cum_reg)) +
+    geom_line(size = 1) +
+    theme_classic() +
+    theme(axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          axis.line = element_line(colour = "#202020"),
+          axis.text = element_text(colour = "#202020"),
+          plot.margin = unit(c(-0, 0, 0, 0), "null"),
+          plot.title = element_text(vjust = 1, hjust = 0.5)) +
+    labs(title = "Cumulative count of all team registrations")
+    
+    
+```
+
+
+
