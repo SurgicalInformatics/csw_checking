@@ -8,7 +8,7 @@ output: html_document
 
 <style type="text/css">
 .main-container {
-  max-width: 1800px;
+  max-width: 1200px;
   margin-left: auto;
   margin-right: auto;
 }
@@ -161,7 +161,7 @@ Why am I seeing **No** for:
 &nbsp;
 
 * **Registration complete?** - Your registration form was missing vital information.
-    * There is still time to register, go to https://is.gd/miniteams and make sure you have all the necessary information.
+    * Check with enquiry@globalsurg.org which piece of information is missing from your application. 
 
 &nbsp;
 
@@ -181,9 +181,32 @@ Why am I seeing **No** for:
 
 * **Unique emails used?** - The same email has been used for multiple team members.
     + Make sure that each team member has their own email associated with their registration details.
+    
+&nbsp;
+
+**Specialty codes:**
+
+&nbsp;
+
+```{r}
+read_excel("specialty abbreviation.xlsx", 
+                                     col_types = c("skip", "text", "text")) %>% 
+    select(specialty_code = specialty, specialty = specialty_longname) %>% 
+    datatable(rownames = FALSE,
+              width = "50%",
+                options = list(
+                    pageLength = 24,
+                    autoWidth = TRUE,
+                    scrollX = TRUE
+                    ),
+                filter = "top")
+```
+
+    
 
 
 #### **Summary**
+
 
 ```{r}
 # create summary data
@@ -291,7 +314,7 @@ waffle = waffle(
 ```
 
 
-```{r}
+```{r fig.height=6, fig.width=8, out.width="70%"}
 # white space is driving me nuts - partial fix by combining plots!
 ggarrange(
     boxes,
@@ -301,7 +324,7 @@ ggarrange(
     font.label = c(face = "plain"))
 ```
 
-```{r}
+```{r fig.height=3, fig.width=5, out.width="60%"}
 # total of all registrations submitted
 periods_check %>% 
     filter(record_id != 859) %>% 
