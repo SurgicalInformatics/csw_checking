@@ -6,6 +6,13 @@ date: "`r format(Sys.time(), '%d %B, %Y %H:%M')`"
 output: html_document
 ---
 
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(
@@ -49,6 +56,10 @@ periods_check %>%
     select(-time) %>% 
     mutate_at(vars(form_complete:accounts_created_success), function(x)
         (x == "Yes")) %>%
+    # formattable prints NAs that have not been dealt with
+    # quick dirty fix to make them '' instead - RP
+    mutate(Period    = if_else(is.na(Period), "", Period),
+           Specialty = if_else(is.na(Specialty), "", Specialty)) %>% 
     formattable(
         list(
             form_complete = formatter(
@@ -110,16 +121,15 @@ periods_check %>%
                 rownames = FALSE,
                 options = list(
                     pageLength = 50,
-                    autoWidth = TRUE
-                    # columnDefs = list(list(width = '10%',
-                    #                       targets = list(0)))
+                    autoWidth = TRUE,
+                    scrollX = TRUE
                     ),
                 filter = "top",
                 escape = FALSE,
-                colnames = c("Reference" = "record_id",
-           "Registration complete?" = "form_complete",
-           "Period choice successful?" = "period_choice_success",
-           "Duplicate check passed?" = "duplicate_check_success",
+                colnames = c("Ref." = "record_id",
+           "Form complete?" = "form_complete",
+           "Period unique?" = "period_choice_success",
+           "Team members unique?" = "duplicate_check_success",
            "Unique emails used?" = "emails_unique_success",
            "ORCID names showing?" = "orcids_valid_success",
            "Accounts created?" = "accounts_created_success"))
@@ -165,7 +175,7 @@ Why am I seeing **No** for:
 
 &nbsp;
 
-* **Duplicate check passed?** - A member of your team also has a registration submitted with another team.
+* **Team members unique?** - A member of your team also has a registration submitted with another team. Each person can only have a data entry account for a single team.
 
 &nbsp;
 
@@ -237,7 +247,7 @@ boxes = ggplot(boxes_data, aes(
         colour = "white",
         fontface = "bold",
         aes(
-            label = paste0(percent, "% with"),
+            label = paste0("(",percent, "%)"),
             x = x - 2.5,
             y = y - 0.4
         ),
