@@ -166,7 +166,9 @@ Why am I seeing **No** for:
 &nbsp;
 
 * **Period choice successful?** - Another team has already picked the same period and specialty as you.
-    * You can check to see if an alternative period is available here: https://is.gd/miniteams
+    * You can check what the clash might be/what are the available periods from here: https://argoshare.is.ed.ac.uk/surgweek_periods/
+    * You can then ask us to amend your record at: https://is.gd/surghelpdesk
+    * Any questions ask at enquiry@globalsurg.org
 
 &nbsp;
 
@@ -176,6 +178,7 @@ Why am I seeing **No** for:
 &nbsp;
 
 * **Team members unique?** - A member of your team also has a registration submitted with another team. Each person can only have a data entry account for a single team.
+    * Email enquiry@globalsurg.org to clarify
 
 &nbsp;
 

@@ -1,0 +1,12 @@
+name: check_dashboard
+title: check_dashboard
+username: lnorman
+account: lnorman
+server: argoshare.is.ed.ac.uk
+hostUrl: https://argoshare.is.ed.ac.uk/__api__
+appId: 457
+bundleId: 2070
+url: https://argoshare.is.ed.ac.uk/reg_check/
+when: 1602251177.2097
+asMultiple: FALSE
+asStatic: FALSE
