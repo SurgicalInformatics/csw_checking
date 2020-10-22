@@ -55,8 +55,12 @@ periods_check = periods_orig %>%
             period_choice_success == "Yes" &
                 duplicated == "Someone in multiple teams" ~ "No",
             TRUE ~ NA_character_),
-        emails_unique_success = emails_unique %>% fct_recode("Yes" = "All Good",
-                                                             "No" = "Email in use") %>% as.character(),
+        emails_unique_success = case_when(
+            emails_unique == "All Good" & is.na(skip_team) & duplicate_check_success == "Yes" & orcids_valid == "Yes" ~ "Yes",
+            emails_unique == "Email in use" ~ "No",
+            TRUE ~ NA_character_),
+        # emails_unique_success = emails_unique %>% fct_recode("Yes" = "All Good",
+        #                                                      "No" = "Email in use") %>% as.character(),
         orcids_valid_success = case_when(
             orcids_valid == "Yes" & period_choice_success == "Yes" ~ "Yes",
             orcids_valid == "No" & period_choice_success == "Yes" ~ "No",

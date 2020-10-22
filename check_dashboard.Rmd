@@ -273,7 +273,7 @@ boxes = ggplot(boxes_data, aes(
         colour = "white",
         fontface = "bold",
         aes(
-            label = paste0("(",percent, "%)"),
+            label = paste0("(", percent, "%)"),
             x = x - 2.5,
             y = y - 0.4
         ),

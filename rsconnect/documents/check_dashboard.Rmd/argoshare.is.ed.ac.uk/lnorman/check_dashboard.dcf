@@ -5,8 +5,8 @@ account: lnorman
 server: argoshare.is.ed.ac.uk
 hostUrl: https://argoshare.is.ed.ac.uk/__api__
 appId: 457
-bundleId: 2070
+bundleId: 2104
 url: https://argoshare.is.ed.ac.uk/reg_check/
-when: 1602251177.2097
+when: 1603356223.36314
 asMultiple: FALSE
 asStatic: FALSE
