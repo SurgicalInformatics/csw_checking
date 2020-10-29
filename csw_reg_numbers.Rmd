@@ -1,0 +1,171 @@
+---
+title: "Data generated on:"
+date: "`r format(Sys.time(), '%d %B, %Y %H:%M')`"
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    vertical_layout: scroll
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(waffle)
+
+source("00_functions.R")
+source("csw_reg_numbers.R")
+```
+
+```{r numbers}
+# Individual accounts created numbers
+n_user = distinct(users_orig, username) %>% nrow()
+
+# Accounts created numbers
+accounts_created = summary_data %>% 
+    filter(reg_status == "Accounts created") 
+n_accounts_created = accounts_created %>% 
+    pull(n)
+perc_accounts_created = accounts_created %>%
+    pull(percent) %>% 
+    formatC(round(1), format='f', digits=1)
+
+# Application approved numbers
+applications_approved = summary_data %>% 
+    filter(reg_status == "Applications approved") 
+n_applications_approved = applications_approved %>% 
+    pull(n)
+perc_applications_approved = applications_approved %>%
+    pull(percent) %>% 
+    formatC(round(1), format='f', digits=1)
+
+# Other issue
+other_issue = summary_data %>% 
+    filter(reg_status == "Other issue") 
+n_other_issue = other_issue %>% 
+    pull(n)
+perc_other_issue = other_issue %>%
+    pull(percent) %>% 
+    formatC(round(1), format='f', digits=1)
+
+# Periods issue
+periods_issue = summary_data %>% 
+    filter(reg_status == "Periods issue") 
+n_periods_issue = periods_issue %>% 
+    pull(n)
+perc_periods_issue = periods_issue %>%
+    pull(percent) %>% 
+    formatC(round(1), format='f', digits=1)
+
+# De-registered
+deregistered = summary_data_extra %>% 
+    filter(reg_status_extra == "De-registered/merged") 
+n_deregistered = deregistered %>% 
+    pull(n)
+
+# Invalid registrations
+invalid_registrations = summary_data_extra %>% 
+    filter(reg_status_extra == "Invalid registrations") 
+n_invalid_registrations = invalid_registrations %>% 
+    pull(n)
+
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Logins issued
+
+```{r}
+valueBox(formatC(n_user, big.mark=","), 
+         icon = "fa-user")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### Accounts created `r paste0("(", perc_accounts_created, "%)")`
+
+```{r}
+valueBox(formatC(n_accounts_created, big.mark=","), 
+         icon = "fa-users",
+         color = "#1B9E77")
+```
+
+### Applications approved `r paste0("(", perc_applications_approved, "%)")`
+
+```{r}
+valueBox(formatC(n_applications_approved, big.mark=","),
+         icon = "fa-check",
+         color = "#D95F02")
+```
+
+### Other issue `r paste0("(", perc_other_issue, "%)")`
+
+```{r}
+valueBox(formatC(n_other_issue, big.mark=","),
+         icon = "fa-wrench",
+         color = "#7570B3")
+```
+
+### Periods issue `r paste0("(", perc_periods_issue, "%)")`
+
+```{r}
+valueBox(formatC(n_periods_issue, big.mark=","),
+         icon = "fa-exclamation",
+         color = "#E7298A")
+```
+
+Row {data-height=350}
+-----------------------------------------------------------------------
+
+```{r fig.height=3, fig.width=10, out.width="100%"}
+# prepare waffle data
+waffle_percents = round_percent(summary_data$percent)
+names(waffle_percents) = summary_data$reg_status
+
+waffle(
+    waffle_percents,
+    rows = 4,
+    legend_pos = "none")
+```
+
+Row
+-----------------------------------------------------------------------
+
+### De-registered/merged
+
+```{r}
+valueBox(formatC(n_deregistered, big.mark=","),
+         icon = "fa-link",
+         color = "#a6761d")
+```
+
+### Invalid registrations
+
+```{r}
+valueBox(formatC(n_invalid_registrations, big.mark=","),
+         icon = "fa-times",
+         color = "#e6ab02")
+```
+
+Row
+-----------------------------------------------------------------------
+
+```{r fig.height=6, fig.width=10, out.width="100%"}
+reg_orig %>% 
+    filter(record_id != 859) %>% 
+    arrange(time) %>% 
+    mutate(cum_reg = seq_along(time)) %>% 
+    ggplot(aes(x = time, y = cum_reg)) +
+    geom_line(size = 1) +
+    theme_classic() +
+    theme(axis.title = element_blank(),
+          axis.ticks = element_blank(),
+          axis.line = element_line(colour = "#202020"),
+          axis.text = element_text(colour = "#202020"),
+          plot.margin = unit(c(0.1, 0.1, 0.1, 0.1), "null"),
+          plot.title = element_text(hjust = 0.5)
+          ) +
+    labs(title = "Team registrations")
+```
+

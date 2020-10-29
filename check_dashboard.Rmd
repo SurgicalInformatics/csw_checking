@@ -1,9 +1,9 @@
 ---
-title: |
-    ![](https://globalsurg.org/wp-content/uploads/2020/09/logo-surgweek-1200x133.png){} 
-    Surg-Week Registration Check
+title: "![](https://globalsurg.org/wp-content/uploads/2020/09/logo-surgweek-1200x133.png){}"
 date: "`r format(Sys.time(), '%d %B, %Y %H:%M')`"
 output: html_document
+resource_files:
+- csw_reg_numbers.Rmd
 ---
 
 <style type="text/css">
@@ -18,23 +18,16 @@ output: html_document
 knitr::opts_chunk$set(
 	echo = FALSE,
 	message = FALSE,
-	warning = FALSE
-)
+	warning = FALSE)
+
 library(tidyverse)
 library(DT)
 library(knitr)
-#library(icon)
-library(shinyBS)
-library(shiny)
 library(formattable)
-library(fontawesome)
-library(emojifont)
 library(waffle)
-library(ggpubr)
 
+source("00_functions.R")
 source("02_check_dashboard.R")
-
-#load("periods_check.rda")
 ```
 
 -------------------------------------
@@ -45,7 +38,7 @@ Find your team below to check their status then select the **Help** tab for more
 
 You can find your reference number in the confirmation email you received immediately after submitting your registration request.
 
-For a summary of team registration progress so far, click on the **Summary** tab.
+For summaries of team registration and data collection progress so far, click on the **Summary** tabs.
 
 
 #### **Find your team**
@@ -53,7 +46,7 @@ For a summary of team registration progress so far, click on the **Summary** tab
 ```{r}
 
 periods_check %>% 
-    select(-time) %>% 
+    select(-time, -skip_team) %>% 
     mutate_at(vars(form_complete:accounts_created_success), function(x)
         (x == "Yes")) %>%
     # formattable prints NAs that have not been dealt with
@@ -115,15 +108,13 @@ periods_check %>%
                     case_when(x ~ "ok",!x ~ "remove",
                               TRUE ~ ""),
                     case_when(x ~ "Yes",!x ~ "Not yet",
-                              TRUE ~ "")))
-        )) %>%
+                              TRUE ~ ""))))) %>%
             as.datatable(
                 rownames = FALSE,
                 options = list(
                     pageLength = 50,
                     autoWidth = TRUE,
-                    scrollX = TRUE
-                    ),
+                    scrollX = TRUE),
                 filter = "top",
                 escape = FALSE,
                 colnames = c("Ref." = "record_id",
@@ -148,11 +139,12 @@ Go to <a href="https://is.gd/surghelpdesk" target="_blank">**GlobalSurg-CovidSur
 Why is my account not created yet?
 
 * If **Accounts created?** is showing as **Not yet**, this means your account is in the process of being created, you do not need to do anything further at this stage.
+    * Accounts get created on Mondays, Wednesdays and Fridays.
     * Teams who are collecting in Period 3 will get accounts 12-16 October.
     * Teams who are collecting in Period 4 will get accounts 19-23 October.
 
 * If **Accounts created?** is blank, this means all previous checks have not yet been passed.
-        * Resolve any checks that have a cross and are marked as **No**, see below.
+    * Resolve any checks that have a cross and are marked as **No**, see below.
 
 &nbsp;
 
@@ -200,152 +192,19 @@ read_excel("specialty abbreviation.xlsx",
                 options = list(
                     pageLength = 24,
                     autoWidth = TRUE,
-                    scrollX = TRUE
-                    ),
+                    scrollX = TRUE),
                 filter = "top")
 ```
 
     
+#### **Registration summary**
 
-
-#### **Summary**
-
-
-```{r}
-# create summary data
-summary_data = periods_check %>%
-    mutate(
-        reg_status = case_when(
-            accounts_created_success == "Yes" ~ "Accounts created",
-            emails_unique_success == "Yes" ~ "Applications approved",
-            form_complete == "Yes" ~ "Checks still to pass",
-            TRUE ~ NA_character_
-        ) %>% fct_relevel("Accounts created", "Waiting for accounts")
-    ) %>%
-    drop_na(reg_status) %>%
-    group_by(reg_status) %>%
-    summarise(n = n()) %>%
-    mutate(percent = round(n / sum(n) * 100))
-
-# create boxes data
-boxes_data = summary_data %>%
-    mutate(
-        x = seq(2, 15, 6.5),
-        y = rep(1, 3),
-        h = rep(4.25, 3),
-        w = rep(6.25, 3),
-        shape = fontawesome(c(
-            "fa-check-square-o", "fa-clock-o", "fa-pencil-square-o")),
-        font_family = c(rep("fontawesome-webfont", 3)),
-        color = factor(1:3))
-
-# make boxes
-boxes = ggplot(boxes_data, aes(
-    x,
-    y,
-    height = h,
-    width = w,
-    label = reg_status
-)) +
-    geom_tile(aes(fill = color)) +
-    geom_text(
-        colour = "white",
-        fontface = "bold",
-        size = 10,
-        aes(
-            label = n,
-            x = x - 2.5,
-            y = y + 0.8
-        ),
-        hjust = 0
-    ) +
-    geom_text(
-        color = "white",
-        fontface = "bold",
-        aes(
-            label = reg_status,
-            x = x - 2.5,
-            y = y - 1.3
-        ),
-        hjust = 0
-    ) +
-    geom_text(
-        colour = "white",
-        fontface = "bold",
-        aes(
-            label = paste0("(", percent, "%)"),
-            x = x - 2.5,
-            y = y - 0.4
-        ),
-        hjust = 0
-    ) +
-    scale_fill_brewer(type = "qual", palette = "Dark2") +
-    ## fontawesome issues below
-    # geom_text(
-    #     size = 20,
-    #     aes(
-    #         label = shape,
-    #         family = font_family,
-    #         x = x + 1.5,
-    #         y = y + 0.5
-    #     ),
-    #     alpha = 0.25
-    # ) +
-    theme_void() +
-    coord_fixed(ratio = 1) +
-    theme(plot.margin = unit(c(-0.15, 0, -0.15, 0), "null")) +
-    theme(legend.position = "none")
-
+```{r out.extra='style="border: none;"', out.width='100%'}
+include_url('https://argoshare.is.ed.ac.uk/content/468', height = "1600px")
 ```
 
-```{r}
-# prepare waffle data
-waffle_percents = summary_data$percent
-names(waffle_percents) = summary_data$reg_status
+#### **Data summary**
 
-waffle = waffle(
-    waffle_percents,
-    rows = 4,
-    legend_pos = "none"
-    ## fontawesome issues below
-    # use_glyph = c("check-square-o", "pencil-square-o", "clock-o"),
-    # glyph_size = 5
-    ) +
-    theme(plot.margin = unit(c(-0.25, 0, 0, 0), "null")) 
-    # theme(plot.background = element_rect(colour = "red"))
-
+```{r out.extra='style="border: none;"', out.width='100%'}
+include_url('https://argoshare.is.ed.ac.uk/content/470', height = "1000px")
 ```
-
-
-```{r fig.height=6, fig.width=8, out.width="70%"}
-# white space is driving me nuts - partial fix by combining plots!
-ggarrange(
-    boxes,
-    waffle,
-    ncol = 1,
-    # labels = c(title = "Mini-team status"),
-    font.label = c(face = "plain"))
-```
-
-```{r fig.height=3, fig.width=5, out.width="60%"}
-# total of all registrations submitted
-periods_check %>% 
-    filter(record_id != 859) %>% 
-    arrange(time) %>% 
-    mutate(cum_reg = seq_along(time)) %>% 
-    ggplot(aes(x = time, y = cum_reg)) +
-    geom_line(size = 1) +
-    theme_classic() +
-    theme(axis.title = element_blank(),
-          axis.ticks = element_blank(),
-          axis.line = element_line(colour = "#202020"),
-          axis.text = element_text(colour = "#202020"),
-          plot.margin = unit(c(-0, 0, 0, 0), "null"),
-          plot.title = element_text(vjust = 1, hjust = 0.5)) +
-    labs(title = "Cumulative count of all team registrations")
-    
-    
-```
-
-
-
