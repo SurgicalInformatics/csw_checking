@@ -98,5 +98,7 @@ periods_check = periods_orig %>%
         duplicate_check_success,
         emails_unique_success,
         accounts_created_success,
-        skip_team) %>% 
+        skip_team,
+        emails_unique,
+        orcids_valid) %>% 
     left_join(specialtyperiods)

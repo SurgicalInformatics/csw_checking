@@ -43,10 +43,178 @@ For summaries of team registration and data collection progress so far, click on
 
 #### **Find your team**
 
+
+
 ```{r}
 
+periods_check_reduced = periods_check %>% 
+    mutate(status = case_when(accounts_created_success == "Yes" ~ "Yes",
+                              accounts_created_success != "Yes" ~ "Not yet",
+                              is.na(accounts_created_success) ~ NA_character_),
+           issue = case_when(skip_team == "No" ~ "De-registered",
+                             accounts_created_success == "Yes" ~ "",
+                             accounts_created_success != "Yes" ~ "Accounts will be created in next batch",
+                             form_complete == "No" ~ "Application form incomplete",
+                             period_choice_success == "No" ~ "Another mini-team has already selected this period",
+                             duplicate_check_success == "No" ~ "Someone is in multiple mini-teams",
+                             emails_unique == "Email in use" & orcids_valid == "No" ~ "Check all team members have a valid ORCID and unique email",
+                             emails_unique == "Email in use" ~ "Check all team members have a unique email",
+                             orcids_valid == "No" ~ "Check all team members have a valid ORCID",
+                             TRUE ~ "Not checked yet"))
+
+periods_check_reduced %>% 
+    select(record_id, status, issue, Period, Specialty) %>% 
+    mutate_at(vars(status), function(x)
+        (x == "Yes")) %>%
+    # formattable prints NAs that have not been dealt with
+    # quick dirty fix to make them '' instead - RP
+    mutate(Period    = if_else(is.na(Period), "", Period),
+           Specialty = if_else(is.na(Specialty), "", Specialty)) %>% 
+    formattable(
+        list(
+            status = formatter(
+                "span",
+                style = x ~ style(color = case_when(x ~ "green",!x ~ "green",
+                                                    TRUE ~ "red")),
+                x ~ icontext(
+                    case_when(x ~ "ok",!x ~ "remove",
+                              TRUE ~ "remove"),
+                    case_when(x ~ "Accounts created",
+                              !x ~ "Nearly there",
+                              TRUE ~ "Issue")))
+            )) %>%
+            as.datatable(
+                rownames = FALSE,
+                options = list(
+                    pageLength = 25,
+                    autoWidth = TRUE,
+                    scrollX = TRUE),
+                filter = "top",
+                escape = FALSE,
+                colnames = c("Ref." = "record_id",
+           "Status" = "status",
+           "Issue" = "issue"))
+        
+```
+
+#### **Help**
+
+&nbsp;
+
+Go to <a href="https://is.gd/surghelpdesk" target="_blank">**GlobalSurg-CovidSurg Helpdesk**</a> for general help relating to the Surg-Week project.
+
+&nbsp;
+
+Why is my account not created yet?
+
+* If **Status** is showing as **Nearly there**, this means your account is in the process of being created, you do not need to do anything further at this stage.
+    * Accounts get created on Mondays, Wednesdays and Fridays.
+
+<!-- * If **Accounts created?** is showing as **Not yet**, this means your account is in the process of being created, you do not need to do anything further at this stage. -->
+<!--     * Accounts get created on Mondays, Wednesdays and Fridays. -->
+<!--     * Teams who are collecting in Period 3 will get accounts 12-16 October. -->
+<!--     * Teams who are collecting in Period 4 will get accounts 19-23 October. -->
+
+* If **Status** is showing as **Issue**, this means all previous checks have not yet been passed.
+    * Look under the **Issue** column to see if you can resolve the problem.  There is further help below.
+
+<!-- * If **Accounts created?** is blank, this means all previous checks have not yet been passed. -->
+<!--     * Resolve any checks that have a cross and are marked as **No**, see below. -->
+
+&nbsp;
+
+Why am I seeing **Application form incomplete**?
+
+<!-- Why am I seeing **No** for: -->
+
+* Your registration form was missing vital information.
+    * Check with enquiry@globalsurg.org which piece of information is missing from your application. 
+
+<!-- * **Registration complete?** - Your registration form was missing vital information. -->
+<!--     * Check with enquiry@globalsurg.org which piece of information is missing from your application.  -->
+
+&nbsp;
+
+Why am I seeing **Another mini-team has already selected this period**?
+
+* Another team has already submitted their registration for the same period and specialty as you.
+    * You can check what the clash might be/what are the available periods from here: https://argoshare.is.ed.ac.uk/surgweek_periods/
+    * You can then ask us to amend your record at: https://is.gd/surghelpdesk
+    * Any questions ask at enquiry@globalsurg.org
+
+<!-- * **Period choice successful?** - Another team has already picked the same period and specialty as you. -->
+<!--     * You can check what the clash might be/what are the available periods from here: https://argoshare.is.ed.ac.uk/surgweek_periods/ -->
+<!--     * You can then ask us to amend your record at: https://is.gd/surghelpdesk -->
+<!--     * Any questions ask at enquiry@globalsurg.org -->
+
+&nbsp;
+
+Why am I seeing **Someone is in multiple mini-teams**?
+
+* This means a member of your team also has a registration submitted with another team. Each person can only have a data entry account for a single team.
+    * Email enquiry@globalsurg.org to clarify
+
+<!-- * **Team members unique?** - A member of your team also has a registration submitted with another team. Each person can only have a data entry account for a single team. -->
+<!--     * Email enquiry@globalsurg.org to clarify -->
+
+&nbsp;
+
+Why am I being asked to check **ORCID** or **email**?
+
+* If there is a problem with ORCID, either the ORCID you entered was not valid or no name is currently showing on your ORCID record.
+    * Check that you have not made a mistake and that all name fields are complete and *not* set to private on ORCID: https://orcid.org/
+
+<!-- * **Valid ORCIDs?** - Either the ORCID you entered was not valid or no name is currently showing on your ORCID record. -->
+<!--     * Check that you have not made a mistake and that all name fields are complete and not set to private on ORCID: https://orcid.org/ -->
+
+* If there is a problem with email, it means the same email has been used for multiple team members.
+    + Make sure that each team member has their own email associated with their registration details.
+
+<!-- * **Unique emails used?** - The same email has been used for multiple team members. -->
+<!--     + Make sure that each team member has their own email associated with their registration details. -->
+
+&nbsp;
+
+**Specialty codes:**
+
+&nbsp;
+
+```{r}
+read_excel("specialty abbreviation.xlsx", 
+                                     col_types = c("skip", "text", "text")) %>% 
+    select(specialty_code = specialty, specialty = specialty_longname) %>% 
+    datatable(rownames = FALSE,
+              width = "50%",
+                options = list(
+                    pageLength = 24,
+                    autoWidth = TRUE,
+                    scrollX = TRUE),
+                filter = "top")
+```
+
+    
+#### **Registration summary**
+
+```{r out.extra='style="border: none;"', out.width='100%'}
+include_url('https://argoshare.is.ed.ac.uk/content/468', height = "1600px")
+```
+
+#### **Data summary**
+
+```{r out.extra='style="border: none;"', out.width='100%'}
+include_url('https://argoshare.is.ed.ac.uk/content/470', height = "1000px")
+```
+
+
+
+
+
+
+
+```{r eval=FALSE, include=FALSE}
+
 periods_check %>% 
-    select(-time, -skip_team) %>% 
+    select(-time, -skip_team, -emails_unique, -orcids_valid) %>% 
     mutate_at(vars(form_complete:accounts_created_success), function(x)
         (x == "Yes")) %>%
     # formattable prints NAs that have not been dealt with
@@ -125,86 +293,4 @@ periods_check %>%
            "ORCID names showing?" = "orcids_valid_success",
            "Accounts created?" = "accounts_created_success"))
         
-```
-
-
-#### **Help**
-
-&nbsp;
-
-Go to <a href="https://is.gd/surghelpdesk" target="_blank">**GlobalSurg-CovidSurg Helpdesk**</a> for general help relating to the Surg-Week project.
-
-&nbsp;
-
-Why is my account not created yet?
-
-* If **Accounts created?** is showing as **Not yet**, this means your account is in the process of being created, you do not need to do anything further at this stage.
-    * Accounts get created on Mondays, Wednesdays and Fridays.
-    * Teams who are collecting in Period 3 will get accounts 12-16 October.
-    * Teams who are collecting in Period 4 will get accounts 19-23 October.
-
-* If **Accounts created?** is blank, this means all previous checks have not yet been passed.
-    * Resolve any checks that have a cross and are marked as **No**, see below.
-
-&nbsp;
-
-Why am I seeing **No** for:
-
-&nbsp;
-
-* **Registration complete?** - Your registration form was missing vital information.
-    * Check with enquiry@globalsurg.org which piece of information is missing from your application. 
-
-&nbsp;
-
-* **Period choice successful?** - Another team has already picked the same period and specialty as you.
-    * You can check what the clash might be/what are the available periods from here: https://argoshare.is.ed.ac.uk/surgweek_periods/
-    * You can then ask us to amend your record at: https://is.gd/surghelpdesk
-    * Any questions ask at enquiry@globalsurg.org
-
-&nbsp;
-
-* **Valid ORCIDs?** - Either the ORCID you entered was not valid or no name is currently showing on your ORCID record.
-    * Check that you have not made a mistake and that all name fields are complete and not set to private on ORCID: https://orcid.org/
-
-&nbsp;
-
-* **Team members unique?** - A member of your team also has a registration submitted with another team. Each person can only have a data entry account for a single team.
-    * Email enquiry@globalsurg.org to clarify
-
-&nbsp;
-
-* **Unique emails used?** - The same email has been used for multiple team members.
-    + Make sure that each team member has their own email associated with their registration details.
-    
-&nbsp;
-
-**Specialty codes:**
-
-&nbsp;
-
-```{r}
-read_excel("specialty abbreviation.xlsx", 
-                                     col_types = c("skip", "text", "text")) %>% 
-    select(specialty_code = specialty, specialty = specialty_longname) %>% 
-    datatable(rownames = FALSE,
-              width = "50%",
-                options = list(
-                    pageLength = 24,
-                    autoWidth = TRUE,
-                    scrollX = TRUE),
-                filter = "top")
-```
-
-    
-#### **Registration summary**
-
-```{r out.extra='style="border: none;"', out.width='100%'}
-include_url('https://argoshare.is.ed.ac.uk/content/468', height = "1600px")
-```
-
-#### **Data summary**
-
-```{r out.extra='style="border: none;"', out.width='100%'}
-include_url('https://argoshare.is.ed.ac.uk/content/470', height = "1000px")
 ```
