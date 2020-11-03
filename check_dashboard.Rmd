@@ -67,10 +67,10 @@ periods_check_reduced = periods_check %>%
 periods_check_reduced %>% 
     select(record_id, status, issue, Period, Specialty) %>% 
     mutate(status = case_when(status == "Yes"            ~ "Accounts created",
-                               status == "Not yet"        ~ "Checks passed",
-                               issue == "Not checked yet" ~ "In progress",
-                               is.na(status) ~ "Issue",
-                               TRUE ~ "ADMIN")) %>% 
+                              status == "Not yet"        ~ "Checks passed",
+                              issue == "Not checked yet" ~ "In progress",
+                              is.na(status) ~ "Issue",
+                              TRUE ~ "ADMIN")) %>% 
     #mutate_at(vars(status), function(x)(x == "Yes")) %>% 
     # formattable prints NAs that have not been dealt with
     # quick dirty fix to make them '' instead - RP
@@ -86,7 +86,7 @@ periods_check_reduced %>%
                                                     TRUE ~ "black")),
                 x ~ icontext(
                     case_when(x %in% c("Accounts created", "Checks passed") ~ "ok",
-                               x == "Progress" ~ "remove",
+                              x == "Progress" ~ "remove",
                               TRUE ~ "remove"),
                     x))
         )) %>%
