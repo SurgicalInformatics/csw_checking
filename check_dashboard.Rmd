@@ -110,7 +110,7 @@ periods_check_reduced %>%
 
 Why is my account not created yet?
 
-* If **Status** is showing as **Nearly there**, this means your account is in the process of being created, you do not need to do anything further at this stage.
+* If **Status** is showing as **Checks passed**, this means your account is in the process of being created, you do not need to do anything further at this stage.
 * Accounts get created on Mondays, Wednesdays and Fridays.
 
 <!-- * If **Accounts created?** is showing as **Not yet**, this means your account is in the process of being created, you do not need to do anything further at this stage. -->
